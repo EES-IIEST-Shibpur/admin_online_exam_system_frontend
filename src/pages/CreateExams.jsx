@@ -14,7 +14,7 @@ function CreateExam() {
     });
 
     const { questions, fetchQuestionMessage } = useContext(QuestionContext);
-    const {token} = useContext(AuthContext);
+    const { token } = useContext(AuthContext);
     const [message, setMessage] = useState("");
 
     const handleInputChange = (e) => {
@@ -31,32 +31,32 @@ function CreateExam() {
             const updatedQuestions = isSelected
                 ? prevState.questions.filter((questionId) => questionId !== id)
                 : [...prevState.questions, id];
-    
+
             return {
                 ...prevState,
                 questions: updatedQuestions,
             };
         });
-    };    
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!formData.title || !formData.duration || !formData.startTime || !formData.endTime) {
-            setMessage("Please fill all the required fields.");
-            return;
-        }
+        const payload = {
+            ...formData,
+            startTime: new Date(formData.startTime).toISOString(),
+            endTime: new Date(formData.endTime).toISOString()
+        };
 
         try {
-            const res = await api.post("/exams/create", formData, {
+            const res = await api.post("/exams/create", payload, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
             setMessage(res.data.message);
         } catch (error) {
-            console.error(error);
-            setMessage(error.response?.data?.message || "An error occurred while creating the exam.");
+            setMessage("Error creating exam");
         }
     };
 
@@ -114,38 +114,38 @@ function CreateExam() {
                 <button type="submit">Submit</button>
             </form>
             <div>
-    <h2>Questions</h2>
-    {questions.length > 0 ? (
-        questions.map((question) => (
-            <div key={question._id} className="question-card">
-                <p>
-                    <strong>{question.text}</strong>
-                </p>
-                <button onClick={() => handleQuestionsChange(question._id)}>
-                    {formData.questions.includes(question._id) ? "Deselect" : "Select"}
-                </button>
-                <p>Type: {question.type}</p>
-                <p>Category: {question.category}</p>
-                <p>Difficulty Level: {question.difficultyLevel}</p>
+                <h2>Questions</h2>
+                {questions.length > 0 ? (
+                    questions.map((question) => (
+                        <div key={question._id} className="question-card">
+                            <p>
+                                <strong>{question.text}</strong>
+                            </p>
+                            <button onClick={() => handleQuestionsChange(question._id)}>
+                                {formData.questions.includes(question._id) ? "Deselect" : "Select"}
+                            </button>
+                            <p>Type: {question.type}</p>
+                            <p>Category: {question.category}</p>
+                            <p>Difficulty Level: {question.difficultyLevel}</p>
 
-                <div>
-                    <strong>Options:</strong>
-                    <ul>
-                        {question.options.map((option, index) => (
-                            <li key={index}>
-                                {option.text} {option.isCorrect && <span>(Correct)</span>}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
+                            <div>
+                                <strong>Options:</strong>
+                                <ul>
+                                    {question.options.map((option, index) => (
+                                        <li key={index}>
+                                            {option.text} {option.isCorrect && <span>(Correct)</span>}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
 
-                {question.image && <img src={question.image} alt="Question visual" />}
+                            {question.image && <img src={question.image} alt="Question visual" />}
+                        </div>
+                    ))
+                ) : (
+                    <p>No questions found</p>
+                )}
             </div>
-        ))
-    ) : (
-        <p>No questions found</p>
-    )}
-    </div>
         </div>
     );
 }
